@@ -2,9 +2,10 @@
   <artifact type="jar" name="DBMS-Metrics:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/DBMS_Metrics_jar</output-path>
     <root id="archive" name="DBMS-Metrics.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+      </element>
       <element id="module-output" name="DBMS-Metrics" />
-      <element id="library" level="project" name="javafxbin" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/../masterarbeit/mssql-jdbc-7.4.1.jre8.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../javafx-sdk-11.0.2/lib/javafx-swt.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../javafx-sdk-11.0.2/lib/javafx.base.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../javafx-sdk-11.0.2/lib/javafx.controls.jar" path-in-jar="/" />
@@ -13,6 +14,7 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/../javafx-sdk-11.0.2/lib/javafx.media.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../javafx-sdk-11.0.2/lib/javafx.swing.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../javafx-sdk-11.0.2/lib/javafx.web.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../masterarbeit/mssql-jdbc-7.4.1.jre8.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

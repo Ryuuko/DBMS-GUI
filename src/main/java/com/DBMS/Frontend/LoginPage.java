@@ -1,4 +1,4 @@
-package com.DBMS.Frontend;
+package main.java.com.DBMS.Frontend;
 
 import com.DBMS.Backend.MssqlConnection;
 import javafx.application.Application;
@@ -13,7 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
-public class Main extends Application {
+public class LoginPage extends Application {
 
     public static void main(String[] args) {
         launch(args);
@@ -97,8 +97,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage s) throws Exception {
-//        /* the following code is only used for debugging/developing MetricsPage*/
-//
+        /********************************************************************/
+        /* the following code is only used for debugging/developing MetricsPage*/
+
         String serverName = "localhost:52353";
         String databaseName = "ReadingDBLog";
         String user = "sa";
@@ -115,7 +116,6 @@ public class Main extends Application {
         /*if you debug using the code above, remember to comment the following code in order to
         disable the main page and directly go to the metrics page!
          */
-
 
 //        GridPane gr = new GridPane();
 //        gr.setStyle("-fx-background-color:#FFF5EE");
