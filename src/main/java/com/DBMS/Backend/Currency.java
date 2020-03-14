@@ -3,110 +3,34 @@ package com.DBMS.Backend;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
-public class Currency {
+public class Currency extends Metrics {
     private String tableName;
     private Statement statement;
-    private int totalNum;
-    private double[] ageUpdate;
+    private HashMap<Long, Double> pkMapAgeUpdate;
     private double totalFreq;
-    private Double avgCurrency; // use wrapper class in order to check nullness in the calculationTableLevel
+    private String primaryKey;
 
     public Currency(String tableName, Statement statement) {
+        super(tableName, statement);
         this.tableName = tableName;
         this.statement = statement;
-        String countCommand = "SELECT COUNT(*) AS Total\n" +
-                "FROM " + tableName + ";";
-        try {
-            ResultSet resultSetTotal = statement.executeQuery(countCommand);
-            if (resultSetTotal.next()) {
-                this.totalNum = resultSetTotal.getInt("Total"); // save the count number in the member variable
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        System.out.print("The total number of record: " + totalNum + "\n");
-
-        this.ageUpdate = new double[totalNum];
+        this.pkMapAgeUpdate = new HashMap<>();
         this.totalFreq = 0; // initialize the total frequency from 0
     }
 
-    /*use inner class to differentiate the row level and table level calculation*/
-
-    public abstract class Level {
-
-        public void calculation() {
-            double avgFreq = avgFreq();
-            System.out.println("The average frequency of the table is:");
-            System.out.println(avgFreq);
-            System.out.println("\n");
-
-            for (int i = 0; i < ageUpdate.length; i++) {
-                double currencyMetric = currecnyFormula(avgFreq, ageUpdate[i]);
-                resultBuild(i, currencyMetric);
-            }
-        }
-
-        private double currecnyFormula(double avgFreq, double ageUpdated) {
-            return 1 / ((avgFreq * ageUpdated) + 1);
-        }
-
-        public abstract void resultBuild(int i, double currencyMetric);
-    }
-
-    public class RowLevel extends Level {
-        @Override
-        public void resultBuild(int i, double currencyMetric) {
-            System.out.println("for row " + i + ":");
-            System.out.println(currencyMetric);
-            System.out.println("\n");
-        }
-    }
-
-    public class TableLevel extends Level {
-        double sum = 0.d;
-
-        @Override
-        public void resultBuild(int i, double currencyMetric) {
-            // i unused here
-            sum += currencyMetric;
-        }
-
-        public void show() {
-            System.out.println("The average currency is: ");
-            System.out.println(sum / totalNum); //todo: prevent the user call the result() firsrt
-        }
-    }
-
-    public class rowTableLevel extends TableLevel {
-        @Override
-        public void resultBuild(int i, double currencyMetric) {
-            System.out.println("for row " + (i + 1) + ":"); // i+1 make it starting from 1 and more user-friendly
-            System.out.println(currencyMetric);
-            sum += currencyMetric;
-            System.out.println("\n");
-        }
-    }
-
-    public double avgFreq() {
-        // todo: avoid using the member variable all the time, get the return value from the dataLoader, eg. totalfreq
-        // todo: avgfreq may be inistanlised as member variable?
-        dataLoader();
-//        System.out.print(totalFreq + "\n");
-//        System.out.println(Arrays.toString(this.ageUpdate) + "\n");
-        return totalFreq / (double) totalNum;
-    }
-
-    private void dataLoader() {
+    private void loadTimeData() {
         // reform the transaction log's data and load the update frequency and the age of updated value
 
-        for (int i = 0; i < totalNum; i++) { // todo: while (this.resultSet.next()) is enough?
+        for (int i = 0; i < getTotalNum(); i++) { // todo: while (this.resultSet.next()) is enough?
 
             try {
 //            System.out.println(command);
 
-                String dataCommand = keyRowCommand(i) + logRebuild() + dataCollection();
-                ResultSet resultSet = this.statement.executeQuery(dataCommand);
+                String sqlQuery = findPkOfRow(i) + findKeyOfRow(i) + logRebuild() + calculateFreqAge();
+//                System.out.println(sqlQuery); // debugging: check if the SQL is correctly written
+                ResultSet resultSet = this.statement.executeQuery(sqlQuery);
 
                 while (resultSet.next()) {
                     /* for debugging */
@@ -114,7 +38,8 @@ public class Currency {
 //                    System.out.printf("%-30.30s  %-30.30s%n", "the update frequency", "the age of updated value");
 //                    System.out.printf("%-30.30s  %-30.30s%n", resultSet.getFloat("updateFreq"),
 //                            resultSet.getDouble("ageUpdate"));
-                    this.ageUpdate[i] = resultSet.getDouble("ageUpdate");
+//                    System.out.println("For the primary key value:" + resultSet.getLong("primaryKey"));
+                    this.pkMapAgeUpdate.put(resultSet.getLong("primaryKey"), resultSet.getDouble("ageUpdate"));
                     this.totalFreq += resultSet.getDouble("updateFreq");
                 }
             } catch (SQLException e) {
@@ -125,13 +50,24 @@ public class Currency {
     }
 
     /*The following three functions are SQL-queries */
+    private String findPkOfRow(int row) {
+        if (this.primaryKey == null) {
+            primaryKey = "1"; // if no primary key is set, just assume it's normally the first column
+        }
+        return
+                "declare @primaryKey nvarchar(20)\n" +
+                        "SET @primaryKey = (\n" +
+                        "SELECT " + this.primaryKey +
+                        " FROM " + this.tableName + "\n" +
+                        "ORDER BY 1 \n" +
+                        "OFFSET " + row + "ROWS\n" +  // move the cursor to next row
+                        "FETCH NEXT 1 ROWS ONLY);\n";
+    }
 
-    private String keyRowCommand(int row) {
 
-        // find the key for a row
+    private String findKeyOfRow(int row) {
         return
                 "declare @keyLock nvarchar(20)\n" +
-                        "\n" +
                         "SET @keyLock = (\n" +
                         "SELECT  %%lockres%%\n" +
                         "FROM " + this.tableName + "\n" +
@@ -162,7 +98,7 @@ public class Currency {
                         "  [Lock Information],\n" +
                         " [AllocUnitName]\n" +
                         " FROM sys.fn_dblog(NULL,NULL)\n" +
-                        " WHERE AllocUnitName='dbo.Location') AS Subset\n" +
+                        " WHERE AllocUnitName='dbo." + this.tableName + "') AS Subset\n" +
                         " JOIN \n" + // Self-Join the one which provide the transaction commit's timestamp
                         " (SELECT \n" +
                         " [Transaction ID],\n" +
@@ -177,7 +113,7 @@ public class Currency {
                         "ORDER BY [End Time] ASC;\n";
     }
 
-    private String dataCollection() {
+    private String calculateFreqAge() {
         // summarize two necessary data: update frequency and age for that row
         return
                 // --how many time does the row get updated?
@@ -202,12 +138,58 @@ public class Currency {
                         ") timeLog);\n" +
                         "\n" +
                         //       "--return one single table with all the necessary information\n" +
-                        "SELECT @updateFreq AS updateFreq, @ageUpdate AS ageUpdate;";
+                        "SELECT @updateFreq AS updateFreq, @ageUpdate AS ageUpdate, @primaryKey As primaryKey;";
     }
 
-    public double totalNumGetter() {
-        return totalNum;
+    /*use inner class to differentiate the row level and table level calculation*/
+    private abstract class Level {
+        double avgFreq = getAvgFreq();
+
+        public double currencyFormula(double ageUpdated) {
+            return 1 / ((avgFreq * ageUpdated) + 1);
+        }
+
     }
 
+    public double getAvgFreq() {
+        // todo: avoid using the member variable all the time, get the return value from the dataLoader, eg. totalfreq
+        // todo: avgfreq may be inistanlised as member variable?
+        loadTimeData();
+        System.out.print("the total update frequency is: ");
+        System.out.print(totalFreq + "\n");
+        return totalFreq / (double) getTotalNum();
+    }
+
+    public class RowLevel extends Level {
+        long pkValue;
+
+        public RowLevel(long pkValue) {
+            this.pkValue = pkValue;
+        }
+
+        public double calculate() {
+            return currencyFormula(pkMapAgeUpdate.get(pkValue));
+        }
+
+    }
+
+    public class TableLevel extends Level {
+        double sum = 0.d;
+
+        public double calculate() {
+            System.out.println("The average frequency of the table is:");
+            System.out.println(avgFreq);
+            System.out.println("\n");
+
+            for (double value : pkMapAgeUpdate.values()) {
+                sum += currencyFormula(value);
+            }
+            return sum;
+        }
+    }
+
+    public void setPrimaryKey(String primaryKey) {
+        this.primaryKey = primaryKey;
+    }
 }
 

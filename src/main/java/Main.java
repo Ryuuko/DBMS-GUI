@@ -5,8 +5,10 @@ package main.java;
  * https://stackoverflow.com/questions/52569724/javafx-11-create-a-jar-file-with-gradle
  * */
 
+import com.DBMS.Frontend.LoginPage;
+
 public class Main {
     public static void main(String[] args) {
-        main.java.com.DBMS.Frontend.LoginPage.main(args);
+        LoginPage.main(args);
     }
 }

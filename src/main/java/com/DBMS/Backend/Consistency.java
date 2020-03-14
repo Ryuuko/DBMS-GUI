@@ -43,7 +43,6 @@ public class Consistency extends Metrics {
         consistencyRef.csvRead(); // load the data according the chosen columns
         consistencyRef.freqListBuild(); // build the frequency list
 
-
     }
 
     public double calculation() {
@@ -59,42 +58,48 @@ public class Consistency extends Metrics {
 
 //                System.out.println("We're going to examine this group:");
 //                System.out.println(examinedElement);
-
-
+//
+//
 //                System.out.println("List of our reference group:");
 //                System.out.println(consistencyRef.freqListGetter());
 
-                // load the reference's count
-                float refCount = consistencyRef.freqListGetter().get(examinedElement);
+                /*load the reference's count*/
 
+
+                if (!consistencyRef.freqListGetter().containsKey(examinedElement)) {
+//                    System.out.println("Group not contained, skip the calculation for this group");
+                    continue;
+                }
+
+                float refCount = consistencyRef.freqListGetter().get(examinedElement);
 
                 // run the following code if there's an appropriate combination exist in the reference dataset
 
-                if (refCount != 0) {
-                    double refFreq = (double) refCount / consistencyRef.totalGetter();
-//                    System.out.println("examined Element:" + examinedElement); // for debugging
-//                    System.out.println("examined frequency:" + examinedFreq);
-//                    System.out.println("refFreq:" + refFreq);
-//                    System.out.println("sample size:" + super.getTotalNum());
+                double refFreq = (double) refCount / consistencyRef.totalGetter();
+//                System.out.println("examined Element:" + examinedElement); // for debugging
+//                System.out.println("examined frequency:" + examinedFreq);
+//                System.out.println("refFreq:" + refFreq);
+//                System.out.println("sample size:" + super.getTotalNum());
 
-                    // load the two-side hypothesis algorithm
-                    BinomialTest binomialTest = new BinomialTest();
-                    double score = binomialTest.binomialTest((int) super.getTotalNum(),
-                            examinedFreq, refFreq, TWO_SIDED);
-                    System.out.println(score);
-                    scoreSum += score;
-                    groupCount++;
-                }
+                // load the two-side hypothesis algorithm
+                BinomialTest binomialTest = new BinomialTest();
+                double score = binomialTest.binomialTest((int) super.getTotalNum(),
+                        examinedFreq, refFreq, TWO_SIDED);
+
+//                System.out.println("the score for this group is:");
+//                System.out.println(score);
+
+                scoreSum += score;
+                groupCount++;
+
             } //todo: option, else: write down the incorrect one into txt
 //            return correctNum / this.totalNum;
         } catch (SQLException e) {
             System.out.println("Connection failure.");
             e.printStackTrace();
         }
-//        System.out.println("The amount of groups: " + groupCount);
-//        System.out.println("sum of score: " + scoreSum);
 
-        return scoreSum / groupCount;
+        return groupCount != 0 ? scoreSum / groupCount : 0; // if we found any group, return the division, else return 0
     }
 }
 

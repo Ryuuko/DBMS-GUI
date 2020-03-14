@@ -15,8 +15,8 @@ public class ConsistencyRef extends main.java.com.DBMS.Backend.CSVLoader {
 
     public ConsistencyRef(String url, int antecedent, int consequent, boolean skip) {
         super(url, skip);
-        this.antecedent = antecedent;
-        this.consequent = consequent;
+        this.antecedent = antecedent - 1; // the column number start from 1 in GUI
+        this.consequent = consequent - 1;
         this.list = new ArrayList<>();
     }
 

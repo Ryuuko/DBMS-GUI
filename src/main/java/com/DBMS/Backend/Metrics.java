@@ -10,7 +10,7 @@ public class Metrics {
 
     public Metrics(String tableName, Statement statement) {
         String countCommand = "SELECT COUNT(*) AS Total " + "FROM " + tableName + ";";
-        System.out.println(countCommand);
+//        System.out.println(countCommand);
         try {
             ResultSet resultSetTotal = statement.executeQuery(countCommand);
             if (resultSetTotal.next()) {

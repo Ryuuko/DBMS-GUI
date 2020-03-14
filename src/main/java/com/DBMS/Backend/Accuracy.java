@@ -30,7 +30,7 @@ public class Accuracy extends Metrics {
         }
     }
 
-    public float calculation() {
+    public float calculate() {
         // load the csv data
         main.java.com.DBMS.Backend.AccuracyRef accuracyRef = new main.java.com.DBMS.Backend.AccuracyRef(this.path,
                 refNum, true);

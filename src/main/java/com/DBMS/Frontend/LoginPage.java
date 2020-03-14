@@ -1,4 +1,4 @@
-package main.java.com.DBMS.Frontend;
+package com.DBMS.Frontend;
 
 import com.DBMS.Backend.MssqlConnection;
 import javafx.application.Application;
