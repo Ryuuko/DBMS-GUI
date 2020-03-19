@@ -155,8 +155,8 @@ public class Currency extends Metrics {
         // todo: avoid using the member variable all the time, get the return value from the dataLoader, eg. totalfreq
         // todo: avgfreq may be inistanlised as member variable?
         loadTimeData();
-        System.out.print("the total update frequency is: ");
-        System.out.print(totalFreq + "\n");
+//        System.out.print("the total update frequency is: ");
+//        System.out.print(totalFreq + "\n");
         return totalFreq / (double) getTotalNum();
     }
 
@@ -177,9 +177,9 @@ public class Currency extends Metrics {
         double sum = 0.d;
 
         public double calculate() {
-            System.out.println("The average frequency of the table is:");
-            System.out.println(avgFreq);
-            System.out.println("\n");
+//            System.out.println("The average frequency of the table is:");
+//            System.out.println(avgFreq);
+//            System.out.println("\n");
 
             for (double value : pkMapAgeUpdate.values()) {
                 sum += currencyFormula(value);

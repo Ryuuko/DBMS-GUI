@@ -5,13 +5,16 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class LoginPage extends Application {
 
@@ -47,13 +50,16 @@ public class LoginPage extends Application {
 
                 MssqlConnection mssqlConnection = new MssqlConnection(t_hostname.getText(), t_database.getText(),
                         t_username.getText(), t_password.getText());
+
+
                 if (mssqlConnection.startConnection()) {
                     // if connected, move to the next windows
                     MetricsPage metricsPage = new MetricsPage(mssqlConnection.connectionGetter());
 
                     s.close();
                 } else {
-                    System.out.println("Connection failed. Please check your entered information again. Make sure\n" +
+                    System.out.println("Connection failed. " +
+                            "Please check your entered information again. Make sure\n" +
                             " you have turned on the server and allow IP/TCP connection.");
                     // todo: put it as Help text under the button
                 }
@@ -100,16 +106,16 @@ public class LoginPage extends Application {
         /********************************************************************/
         /* the following code is only used for debugging/developing MetricsPage*/
 
-        String serverName = "localhost:52353";
-        String databaseName = "ReadingDBLog";
-        String user = "sa";
-        String passwords = "1Y`ckO\",";
-        MssqlConnection mssqlConnection = new MssqlConnection(serverName, databaseName,
-                user, passwords);
-        if (mssqlConnection.startConnection()) {
-            MetricsPage metricsPage = new MetricsPage(mssqlConnection.connectionGetter());
-            s.close();
-        }
+//        String serverName = "localhost:52353";
+//        String databaseName = "ReadingDBLog";
+//        String user = "sa";
+//        String passwords = "1Y`ckO\",";
+//        MssqlConnection mssqlConnection = new MssqlConnection(serverName, databaseName,
+//                user, passwords);
+//        if (mssqlConnection.startConnection()) {
+//            new MetricsPage(mssqlConnection.connectionGetter());
+//            s.close();
+//        }
 
 
         /*********************************************************************/
@@ -117,28 +123,28 @@ public class LoginPage extends Application {
         disable the main page and directly go to the metrics page!
          */
 
-//        GridPane gr = new GridPane();
-//        gr.setStyle("-fx-background-color:#FFF5EE");
-//        componentAdder(gr, s);
-//
-//        gr.setAlignment(Pos.CENTER);
-//        gr.setHgap(10);
-//        gr.setVgap(15);
-//
-//
-//        double sceneWidth = 500;
-//        double sceneHeight = 500;
-//
-//
-//        Scene scene = new Scene(gr);
-//        s.setScene(scene);
-//
-//        s.setTitle("DBMS-Metrics");
-//        s.getIcons().add(new Image("com\\DBMS\\Frontend\\icon.png"));
-//        s.setWidth(sceneWidth);
-//        s.setHeight(sceneHeight);
-//        s.setResizable(false); // set not to change window
-//        s.initStyle(StageStyle.DECORATED);
-//        s.show();
+        GridPane gr = new GridPane();
+        gr.setStyle("-fx-background-color:#FFF5EE");
+        componentAdder(gr, s);
+
+        gr.setAlignment(Pos.CENTER);
+        gr.setHgap(10);
+        gr.setVgap(15);
+
+
+        double sceneWidth = 500;
+        double sceneHeight = 500;
+
+
+        Scene scene = new Scene(gr);
+        s.setScene(scene);
+
+        s.setTitle("DBMS-Metrics");
+        s.setWidth(sceneWidth);
+        s.setHeight(sceneHeight);
+        s.setResizable(false); // set not to change window
+        s.initStyle(StageStyle.DECORATED);
+        s.show();
+
     }
 }

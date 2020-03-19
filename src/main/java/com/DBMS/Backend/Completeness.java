@@ -49,7 +49,7 @@ public class Completeness extends Metrics {
         public AttributeLevel(String column) {
             String command = "SELECT Count(*) \n" +
                     "FROM " + tableName + " WHERE " + column + " IS NULL;"; //todo: add double quote for safe?
-            System.out.println(command);
+//            System.out.println(command);
             super.runQuery(command);
         }
 

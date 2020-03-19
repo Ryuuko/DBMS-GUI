@@ -42,7 +42,7 @@ public abstract class CSVLoader {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("The references have been successfully loaded");
+//        System.out.println("The references have been successfully loaded");
     }
 
     public abstract void refBuilding(String[] line);

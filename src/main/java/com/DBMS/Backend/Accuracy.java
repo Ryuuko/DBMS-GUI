@@ -22,7 +22,7 @@ public class Accuracy extends Metrics {
         this.refNum = Integer.parseInt(refNum);
 
         String dataCommand = "SELECT " + tableName + ".[" + col + "] FROM " + tableName + ";";
-        System.out.println(dataCommand);
+//        System.out.println(dataCommand);
         try {
             this.resultSet = statement.executeQuery(dataCommand); // traversing the result set from the first statement
         } catch (SQLException e) {
@@ -34,7 +34,7 @@ public class Accuracy extends Metrics {
         // load the csv data
         main.java.com.DBMS.Backend.AccuracyRef accuracyRef = new main.java.com.DBMS.Backend.AccuracyRef(this.path,
                 refNum, true);
-        System.out.println(this.path);
+//        System.out.println(this.path);
         accuracyRef.csvRead();
 
         this.correctNum = 0; // initialize the correct number of value

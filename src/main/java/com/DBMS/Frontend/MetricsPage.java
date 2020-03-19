@@ -6,8 +6,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.concurrent.Worker;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
@@ -29,6 +30,12 @@ public class MetricsPage {
     private ChoiceBox choiceTable;
     private Stage stage;
 
+    /*Create the Grid classes for the metrics*/
+    private AccuracyGrid accuracyGrid;
+    private ConsistencyGrid consistencyGrid;
+    private CurrencyGrid currencyGrid;
+    private CompletenessGrid completenessGrid;
+
     public MetricsPage(Connection connection) {
 
         /*initialize the member variables*/
@@ -42,156 +49,27 @@ public class MetricsPage {
         /*put 4 metrics grids into the a big grid*/
         GridPane metricsGrids = createMetricsCollection();
 
-        AccuracyGrid accuracyGrid = new AccuracyGrid();
-        ConsistencyGrid consistencyGrid = new ConsistencyGrid();
-        CurrencyGrid currencyGrid = new CurrencyGrid();
-        CompletenessGrid completenessGrid = new CompletenessGrid();
+        this.accuracyGrid = new AccuracyGrid();
+        this.consistencyGrid = new ConsistencyGrid();
+        this.currencyGrid = new CurrencyGrid();
+        this.completenessGrid = new CompletenessGrid();
 
         metricsGrids.add(accuracyGrid.getGr(), 0, 0);
         metricsGrids.add(consistencyGrid.getGr(), 1, 0);
         metricsGrids.add(currencyGrid.getGr(), 0, 1);
         metricsGrids.add(completenessGrid.getGr(), 1, 1);
 
-
         /*combine the table grid with the big grid above in the borderPane with position adjustments*/
 
         GridPane tableGrid = createTableGird();
 
         /*create button to connect the backend*/
-        Button submitButton = createButton("Submit");
-
-        submitButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (accuracyGrid.getCbTitle().isSelected()) {
-                    callAccuracy(accuracyGrid);
-                }
-                if (consistencyGrid.getCbTitle().isSelected()) {
-                    callConsistency(consistencyGrid);
-                }
-                if (currencyGrid.getCbTitle().isSelected()) {
-                    callCurrency(currencyGrid);
-                }
-                if (completenessGrid.getCbTitle().isSelected()) {
-                    callCompleteness(completenessGrid);
-                }
-            }
-        });
+        Button submitButton = createButton();
 
         BorderPane borderPane = createBorderPane(tableGrid, metricsGrids, submitButton);
 
         /*finally put all stuffs into the scene*/
         createStage(borderPane);
-    }
-
-
-    /*the following 4 functions connect to the backend code*/
-
-    private void callAccuracy(AccuracyGrid accuracyGrid) {
-        try {
-            Statement statement = conn.createStatement();
-            String tableName = (String) choiceTable.getValue();
-//                        System.out.println(tableName);
-            String accuracyCol = (String) accuracyGrid.examinedCol.getValue();
-            System.out.println(accuracyCol);
-
-            String pathText = accuracyGrid.getPathText().getText();
-
-            String refNum = accuracyGrid.getRefText1().getText().trim(); // trim to ensure safe input
-
-            main.java.com.DBMS.Backend.Accuracy accuracy = new main.java.com.DBMS.Backend.Accuracy(tableName, accuracyCol, pathText, refNum
-                    , statement);
-            System.out.println("Accuracy is: " + accuracy.calculate() + "\n");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void callConsistency(ConsistencyGrid consistencyGrid) {
-        try {
-            Statement statement = conn.createStatement();
-            String tableName = (String) choiceTable.getValue();
-
-            String consistencyCol1 = (String) consistencyGrid.choiceColumn1.getValue();
-            System.out.println(consistencyCol1);
-
-            String consistencyCol2 = (String) consistencyGrid.choiceColumn2.getValue();
-            System.out.println(consistencyCol2);
-
-            String pathText = consistencyGrid.getPathText().getText();
-
-            String refNum1 = consistencyGrid.getRefText1().getText().trim(); // trim to ensure safe input
-            String refNum2 = consistencyGrid.getRefText2().getText().trim(); // trim to ensure safe input
-
-            Consistency consistency = new Consistency(tableName, consistencyCol1, consistencyCol2, pathText,
-                    refNum1, refNum2, statement); //todo: too many parameters
-            System.out.println("Consistency is: " + consistency.calculation() + "\n");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void callCurrency(CurrencyGrid currencyGrid) {
-        try {
-            Statement statement = conn.createStatement();
-            String tableName = (String) choiceTable.getValue();
-//                        System.out.println(tableName);
-
-            Currency currency = new Currency(tableName, statement);
-            if (currencyGrid.getCbRow().isSelected()) {
-                currency.setPrimaryKey((String) currencyGrid.choiceColumnRow.getValue());
-                Currency.RowLevel rowLevel = currency.new RowLevel(
-                        Long.parseLong(currencyGrid.getRefText1().getText()));
-                System.out.println("Currency for the row with primary key " +
-                        currencyGrid.choiceColumnRow.getValue() + " " +
-                        currencyGrid.getRefText1().getText() + " " +
-                        "is: " + rowLevel.calculate() + "\n");
-            }
-
-            if (currencyGrid.getCbTable().isSelected()) {
-                Currency.TableLevel tableLevel = currency.new TableLevel();
-                System.out.println("Currency for the whole table is: " + tableLevel.calculate() + "\n");
-
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void callCompleteness(CompletenessGrid completenessGrid) {
-        try {
-            Statement statement = conn.createStatement();
-            String tableName = (String) choiceTable.getValue();
-//                        System.out.println(tableName);
-            Completeness completeness = new Completeness(tableName, statement);
-
-            if (completenessGrid.getCbRow().isSelected()) {
-                System.out.println("the row level completeness is:");
-                Completeness.RowLevel rowLevel = completeness.
-                        new RowLevel((String) completenessGrid.choiceColumnRow.getValue(),
-                        completenessGrid.getRefText1().getText());
-                System.out.println(rowLevel.calculate());
-
-            }
-            if (completenessGrid.getCbAttribute().isSelected()) {
-                System.out.println("the attribute completeness for " + completenessGrid.choiceColumnAttr.getValue()
-                        + " is:");
-                Completeness.AttributeLevel attributeLevel =
-                        completeness.
-                                new AttributeLevel((String) completenessGrid.choiceColumnAttr.getValue());
-                System.out.println(attributeLevel.calculate());
-
-            }
-
-            if (completenessGrid.getCbTable().isSelected()) {
-                Completeness.TableLevel tableLevel = completeness.new TableLevel();
-                System.out.println(tableLevel.calculate());
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     private ChoiceBox createChoiceBoxTable() {
@@ -377,11 +255,180 @@ public class MetricsPage {
     }
 
 
-    private Button createButton(String command) {
-        Button submitButton = new Button(command);
+    private Button createButton() {
+        Button submitButton = new Button("Submit");
         submitButton.setCursor(Cursor.CLOSED_HAND);
         submitButton.setPrefSize(80, 30);
+        ResultService resultService = new ResultService();
+        submitButton.setOnAction(event -> {
+
+//                System.out.println(resultService.getState());
+                    if (resultService.getState() == Worker.State.READY) {
+                        ResultPage resultPage = new ResultPage();
+                        resultService.start(); // start can only be called once
+                        resultService.valueProperty().addListener(
+                                (observable, oldValue, newValue) -> {
+                                    // if no changed just for a moment, the new value will be null!
+                                    if (newValue != null) {
+                                        resultPage.setTextAreaForResult(newValue);
+                                    }
+                                }
+                        );
+                    } else {
+                        resultService.restart();
+                    }
+                }
+        );
         return submitButton;
+    }
+
+    class ResultService extends Service<String> {
+
+        @Override
+        public void start() {
+            super.start();
+        }
+
+        @Override
+        protected Task<String> createTask() {
+            Task<String> task = new Task<String>() {
+                @Override
+                protected String call() throws Exception {
+                    String summary = "";
+                    if (accuracyGrid.getCbTitle().isSelected()) {
+                        summary += getAccuracyResult(accuracyGrid);
+                    }
+                    if (consistencyGrid.getCbTitle().isSelected()) {
+                        summary += getConsistencyResult(consistencyGrid);
+                    }
+                    if (currencyGrid.getCbTitle().isSelected()) {
+                        summary += getCurrencyResult(currencyGrid);
+                    }
+                    if (completenessGrid.getCbTitle().isSelected()) {
+                        summary += getCompletenessResult(completenessGrid);
+                    }
+                    return summary;
+                }
+            };
+            return task;
+        }
+    }
+
+    /*the following 4 functions connect to the backend code*/
+
+    private String getAccuracyResult(AccuracyGrid accuracyGrid) {
+        String result = "";
+        try {
+            Statement statement = conn.createStatement();
+            String tableName = (String) choiceTable.getValue();
+//                        System.out.println(tableName);
+            String accuracyCol = (String) accuracyGrid.examinedCol.getValue();
+            System.out.println(accuracyCol);
+
+            String pathText = accuracyGrid.getPathText().getText();
+
+            String refNum = accuracyGrid.getRefText1().getText().trim(); // trim to ensure safe input
+
+            main.java.com.DBMS.Backend.Accuracy accuracy = new main.java.com.DBMS.Backend.Accuracy(tableName, accuracyCol, pathText, refNum
+                    , statement);
+            result += ("The Accuracy is: " + accuracy.calculate() + "\n");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private String getConsistencyResult(ConsistencyGrid consistencyGrid) {
+        String result = "";
+        try {
+            Statement statement = conn.createStatement();
+            String tableName = (String) choiceTable.getValue();
+
+            String consistencyCol1 = (String) consistencyGrid.choiceColumn1.getValue();
+            System.out.println(consistencyCol1);
+
+            String consistencyCol2 = (String) consistencyGrid.choiceColumn2.getValue();
+            System.out.println(consistencyCol2);
+
+            String pathText = consistencyGrid.getPathText().getText();
+
+            String refNum1 = consistencyGrid.getRefText1().getText().trim(); // trim to ensure safe input
+            String refNum2 = consistencyGrid.getRefText2().getText().trim(); // trim to ensure safe input
+
+            Consistency consistency = new Consistency(tableName, consistencyCol1, consistencyCol2, pathText,
+                    refNum1, refNum2, statement); //todo: too many parameters
+            result += ("The Consistency is: " + consistency.calculation() + "\n");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+    private String getCurrencyResult(CurrencyGrid currencyGrid) {
+        String result = "";
+        try {
+            Statement statement = conn.createStatement();
+            String tableName = (String) choiceTable.getValue();
+//                        System.out.println(tableName);
+
+            Currency currency = new Currency(tableName, statement);
+            if (currencyGrid.getCbRow().isSelected()) {
+                currency.setPrimaryKey((String) currencyGrid.choiceColumnRow.getValue());
+                Currency.RowLevel rowLevel = currency.new RowLevel(
+                        Long.parseLong(currencyGrid.getRefText1().getText()));
+                result += ("The Currency for the row with primary key [" +
+                        currencyGrid.choiceColumnRow.getValue() + "] = " +
+                        currencyGrid.getRefText1().getText() + " " +
+                        "is: " + rowLevel.calculate() + "\n");
+            }
+
+            if (currencyGrid.getCbTable().isSelected()) {
+                Currency.TableLevel tableLevel = currency.new TableLevel();
+                result += ("The relation Currency is: " + tableLevel.calculate() + "\n");
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private String getCompletenessResult(CompletenessGrid completenessGrid) {
+        String result = "";
+        try {
+            Statement statement = conn.createStatement();
+            String tableName = (String) choiceTable.getValue();
+//                        System.out.println(tableName);
+            Completeness completeness = new Completeness(tableName, statement);
+
+            if (completenessGrid.getCbRow().isSelected()) {
+
+                Completeness.RowLevel rowLevel = completeness.
+                        new RowLevel((String) completenessGrid.choiceColumnRow.getValue(),
+                        completenessGrid.getRefText1().getText());
+                result += ("The row level Completeness is: " + rowLevel.calculate() + "\n");
+
+            }
+            if (completenessGrid.getCbAttribute().isSelected()) {
+
+                Completeness.AttributeLevel attributeLevel =
+                        completeness.
+                                new AttributeLevel((String) completenessGrid.choiceColumnAttr.getValue());
+                result += ("The attribute level Completeness for " + completenessGrid.choiceColumnAttr.getValue()
+                        + " is: " + attributeLevel.calculate() + "\n");
+            }
+
+            if (completenessGrid.getCbTable().isSelected()) {
+                Completeness.TableLevel tableLevel = completeness.new TableLevel();
+                result += ("The relation level completeness for is: " + tableLevel.calculate() + "\n");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private BorderPane createBorderPane(GridPane tableGrid, GridPane metricsGrids, Button submitButton) {
