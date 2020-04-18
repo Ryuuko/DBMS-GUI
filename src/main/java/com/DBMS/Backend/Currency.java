@@ -9,7 +9,7 @@ public class Currency extends Metrics {
     private String tableName;
     private Statement statement;
     private HashMap<Long, Double> pkMapAgeUpdate;
-    private double totalFreq;
+    private double totalUpdateFreq;
     private String primaryKey;
 
     public Currency(String tableName, Statement statement) {
@@ -17,7 +17,7 @@ public class Currency extends Metrics {
         this.tableName = tableName;
         this.statement = statement;
         this.pkMapAgeUpdate = new HashMap<>();
-        this.totalFreq = 0; // initialize the total frequency from 0
+        this.totalUpdateFreq = 0; // initialize the total frequency from 0
     }
 
     private void loadTimeData() {
@@ -35,12 +35,12 @@ public class Currency extends Metrics {
                 while (resultSet.next()) {
                     /* for debugging */
 //                    System.out.print("for the row " + (i + 1) + ":\n"); // i+1 make it starting from 1 and more user-friendly
+//                    System.out.println("For the primary key value:" + resultSet.getLong("primaryKey"));
 //                    System.out.printf("%-30.30s  %-30.30s%n", "the update frequency", "the age of updated value");
 //                    System.out.printf("%-30.30s  %-30.30s%n", resultSet.getFloat("updateFreq"),
 //                            resultSet.getDouble("ageUpdate"));
-//                    System.out.println("For the primary key value:" + resultSet.getLong("primaryKey"));
                     this.pkMapAgeUpdate.put(resultSet.getLong("primaryKey"), resultSet.getDouble("ageUpdate"));
-                    this.totalFreq += resultSet.getDouble("updateFreq");
+                    this.totalUpdateFreq += resultSet.getDouble("updateFreq");
                 }
             } catch (SQLException e) {
                 System.out.println("Connection failure.");
@@ -51,9 +51,6 @@ public class Currency extends Metrics {
 
     /*The following three functions are SQL-queries */
     private String findPkOfRow(int row) {
-        if (this.primaryKey == null) {
-            primaryKey = "1"; // if no primary key is set, just assume it's normally the first column
-        }
         return
                 "declare @primaryKey nvarchar(20)\n" +
                         "SET @primaryKey = (\n" +
@@ -143,7 +140,17 @@ public class Currency extends Metrics {
 
     /*use inner class to differentiate the row level and table level calculation*/
     private abstract class Level {
-        double avgFreq = getAvgFreq();
+        double avgFreq;
+
+        Level() {
+            this.avgFreq = getAvgFreq();
+            resetTotalUpdateFreq();
+        }
+
+        public void resetTotalUpdateFreq() {
+            totalUpdateFreq = 0;
+        }
+
 
         public double currencyFormula(double ageUpdated) {
             return 1 / ((avgFreq * ageUpdated) + 1);
@@ -157,7 +164,7 @@ public class Currency extends Metrics {
         loadTimeData();
 //        System.out.print("the total update frequency is: ");
 //        System.out.print(totalFreq + "\n");
-        return totalFreq / (double) getTotalNum();
+        return totalUpdateFreq / (double) getTotalNum();
     }
 
     public class RowLevel extends Level {
@@ -180,16 +187,27 @@ public class Currency extends Metrics {
 //            System.out.println("The average frequency of the table is:");
 //            System.out.println(avgFreq);
 //            System.out.println("\n");
-
+//            System.out.println("{primary key: the age of updated value}");
+//            System.out.println(pkMapAgeUpdate);
             for (double value : pkMapAgeUpdate.values()) {
+                System.out.println("------------------------");
+                System.out.println("Aggregation of currency");
+                System.out.println("the current sum is:");
+                System.out.println(sum);
+//                System.out.println(value);
                 sum += currencyFormula(value);
             }
-            return sum;
+            System.out.println("the sum of the currency is:");
+            System.out.println(sum);
+            System.out.println("----------------------------------------------");
+            return getTotalNum() != 0 ? sum / (double) getTotalNum() : 0; //todo: use functional programming to sum the value?
         }
     }
 
     public void setPrimaryKey(String primaryKey) {
         this.primaryKey = primaryKey;
+        System.out.println("the pk is now: ");
+        System.out.println(this.primaryKey);
     }
 }
 

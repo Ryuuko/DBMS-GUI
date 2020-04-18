@@ -1,15 +1,13 @@
 package com.DBMS.Frontend;
 
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -17,7 +15,7 @@ import javafx.stage.Stage;
 import java.io.File;
 
 
-public class GridFormat {
+public class MetricsGridFormat {
 
     private GridPane gr;
     private Button fileButton;
@@ -27,10 +25,8 @@ public class GridFormat {
     private CheckBox cbAttribute;
     private CheckBox cbTable;
     private TextField pathText;
-    private TextField refText1;
-    private TextField refText2;
 
-    public GridFormat() {
+    public MetricsGridFormat() {
         /*construct some common value of the grid pane in order to standardize*/
         this.gr = new GridPane();
         gr.setAlignment(Pos.CENTER_LEFT);
@@ -50,6 +46,24 @@ public class GridFormat {
             node.setMouseTransparent(true); // if true, transparent to mouse events
             node.setOpacity(0.5);
         }
+    }
+
+    public TextField createRefText() {
+        TextField refText = new TextField(); // todo: only number is allowed
+        refText.setMaxSize(30, 30);
+
+        return refText;
+    }
+
+    /* Create Choice box which binds the colList*/
+    public ChoiceBox createChoiceBoxCols(SimpleListProperty<String> colListProp) {
+        ChoiceBox choiceBoxCols = new ChoiceBox();
+        choiceBoxCols.itemsProperty().bind(colListProp);
+        return choiceBoxCols;
+    }
+
+    public CheckBox createNormalCheckBox() {
+        return new CheckBox();
     }
 
     /*getter and setter for member variables. Set and get particular components when required*/
@@ -72,26 +86,8 @@ public class GridFormat {
         pathText.setMaxHeight(5);
     }
 
-    public void setRefText1() {
-        this.refText1 = new TextField(); // todo: only number is allowed
-        refText1.setMaxSize(30, 30);
-    }
-
-    public void setRefText2() {
-        this.refText2 = new TextField(); // todo: only number is allowed
-        refText2.setMaxSize(30, 30);
-    }
-
     public TextField getPathText() {
         return pathText;
-    }
-
-    public TextField getRefText1() {
-        return refText1;
-    }
-
-    public TextField getRefText2() {
-        return refText2;
     }
 
     public Button getFileButton() {
@@ -152,28 +148,5 @@ public class GridFormat {
         gr.getChildren().forEach(this::makeNodeTransparent); //
     }
 
-    public CheckBox getCbRow() {
-        return cbRow;
-    }
-
-    public void setCbRow() {
-        this.cbRow = new CheckBox();
-    }
-
-    public CheckBox getCbAttribute() {
-        return cbAttribute;
-    }
-
-    public void setCbAttribute() {
-        this.cbAttribute = new CheckBox();
-    }
-
-    public CheckBox getCbTable() {
-        return cbTable;
-    }
-
-    public void setCbTable() {
-        this.cbTable = new CheckBox();
-    }
 
 }

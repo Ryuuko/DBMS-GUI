@@ -6,35 +6,41 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
 import javafx.geometry.Insets;
+import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MetricsPage {
     private Connection conn;
     private SimpleListProperty<String> colListProp;
     private ChoiceBox choiceTable;
     private Stage stage;
+    private HashMap<String, Float> nameMapMetric;
+    private ScrollPane scrollPane;
 
     /*Create the Grid classes for the metrics*/
-    private AccuracyGrid accuracyGrid;
-    private ConsistencyGrid consistencyGrid;
-    private CurrencyGrid currencyGrid;
-    private CompletenessGrid completenessGrid;
+    private AccuracyMetricsGrid accuracyGrid;
+    private ConsistencyMetricsGrid consistencyGrid;
+    private CurrencyMetricsGrid currencyGrid;
+    private CompletenessMetricsGrid completenessGrid;
 
     public MetricsPage(Connection connection) {
 
@@ -45,14 +51,15 @@ public class MetricsPage {
         ObservableList<String> colList = FXCollections.observableArrayList();
         this.colListProp = new SimpleListProperty<String>(colList);
         this.choiceTable = createChoiceBoxTable();
+        this.nameMapMetric = new HashMap<String, Float>();
 
         /*put 4 metrics grids into the a big grid*/
         GridPane metricsGrids = createMetricsCollection();
 
-        this.accuracyGrid = new AccuracyGrid();
-        this.consistencyGrid = new ConsistencyGrid();
-        this.currencyGrid = new CurrencyGrid();
-        this.completenessGrid = new CompletenessGrid();
+        this.accuracyGrid = new AccuracyMetricsGrid();
+        this.consistencyGrid = new ConsistencyMetricsGrid();
+        this.currencyGrid = new CurrencyMetricsGrid();
+        this.completenessGrid = new CompletenessMetricsGrid();
 
         metricsGrids.add(accuracyGrid.getGr(), 0, 0);
         metricsGrids.add(consistencyGrid.getGr(), 1, 0);
@@ -61,7 +68,7 @@ public class MetricsPage {
 
         /*combine the table grid with the big grid above in the borderPane with position adjustments*/
 
-        GridPane tableGrid = createTableGird();
+        GridPane tableGrid = createTitleGird();
 
         /*create button to connect the backend*/
         Button submitButton = createButton();
@@ -70,6 +77,7 @@ public class MetricsPage {
 
         /*finally put all stuffs into the scene*/
         createStage(borderPane);
+
     }
 
     private ChoiceBox createChoiceBoxTable() {
@@ -104,14 +112,26 @@ public class MetricsPage {
                 });
     }
 
-    private GridPane createTableGird() {
+    private GridPane createTitleGird() {
         GridPane gr = new GridPane();
         Label hint = new Label();
-        hint.setText("First of all, choose the examined table:\n" +
-                "If possible, name columns without dots");
+        hint.setText("First of all, choose\n the examined table:\n" +
+                "If possible, \n name columns without dots");
+
+        this.scrollPane = createScrollPane();
+
         gr.add(hint, 0, 1);
         gr.add(choiceTable, 1, 1);
+        gr.add(this.scrollPane, 2, 1);
+        gr.setHgap(50);
         return gr;
+    }
+
+    private ScrollPane createScrollPane() {
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setPrefHeight(120);
+        scrollPane.setPrefWidth(500);
+        return scrollPane;
     }
 
     private GridPane createMetricsCollection() {
@@ -124,49 +144,64 @@ public class MetricsPage {
     /*The following the 4 subclasses inherit the similar grid parent class, four of them are the metrics grid*/
 
     /*choose accuracy*/
-    class AccuracyGrid extends GridFormat {
+    class AccuracyMetricsGrid extends MetricsGridFormat {
         ChoiceBox examinedCol;
+        TextField refText;
+        CheckBox traditionalCheckBox;
+        CheckBox levenshteinCheckBox;
 
-        AccuracyGrid() {
+        AccuracyMetricsGrid() {
 
             /*initialize*/
-            this.examinedCol = createChoiceBoxCols();
+            this.examinedCol = createChoiceBoxCols(colListProp);
+            this.refText = createRefText();
+            this.traditionalCheckBox = createNormalCheckBox();
+            this.levenshteinCheckBox = createNormalCheckBox();
+
             setFileButton(stage);
             setHintTitle("Accuracy");
             setCbTitle();
             setPathText();
-            setRefText1();
+
 
             /*Add to the grid*/
             addComponent(getCbTitle(), 0, 0);
             addComponent(getHintTitle(), 1, 0);
-            addComponent(new Label("Reference"), 0, 1);
-            addComponent(getPathText(), 1, 1);
-            addComponent(getFileButton(), 2, 1);
-            addComponent(new Label("examined column"), 0, 2);
-            addComponent(this.examinedCol, 1, 2);
-            addComponent(new Label("Reference's column \n (start from 1): "), 0, 3);
-            addComponent(getRefText1(), 1, 3);
+
+            addComponent(this.traditionalCheckBox, 0, 1);
+            addComponent(new Label("Traditional"), 1, 1);
+            addComponent(this.levenshteinCheckBox, 2, 1);
+            addComponent(new Label("Levenshtein"), 3, 1);
+
+            addComponent(new Label("Reference"), 0, 2);
+            addComponent(getPathText(), 1, 2);
+            addComponent(getFileButton(), 2, 2);
+            addComponent(new Label("examined column"), 0, 3);
+            addComponent(this.examinedCol, 1, 3);
+            addComponent(new Label("Reference's column \n (start from 1): "), 0, 4);
+            addComponent(refText, 1, 4);
         }
 
     }
 
     /*choose consistency*/
-    class ConsistencyGrid extends GridFormat {
+    class ConsistencyMetricsGrid extends MetricsGridFormat {
         ChoiceBox choiceColumn1;
         ChoiceBox choiceColumn2;
+        TextField refText1;
+        TextField refText2;
 
-        ConsistencyGrid() {
-
+        ConsistencyMetricsGrid() {
             /*Initialize*/
+            this.choiceColumn1 = createChoiceBoxCols(colListProp);
+            this.choiceColumn2 = createChoiceBoxCols(colListProp);
+            this.refText1 = createRefText();
+            this.refText2 = createRefText();
+
             setFileButton(stage);
             setCbTitle();
             setHintTitle("Consistency");
             setPathText();
-            this.choiceColumn1 = createChoiceBoxCols();
-            this.choiceColumn2 = createChoiceBoxCols();
-            setRefText1();
-            setRefText2();
 
             /*Add to the grid*/
             addComponent(getCbTitle(), 0, 0);
@@ -180,166 +215,184 @@ public class MetricsPage {
             addComponent(choiceColumn2, 2, 2);
             addComponent(new Label("Reference's Antecedent\n" +
                     "and Consequent (number): "), 0, 3);
-            addComponent(getRefText1(), 1, 3);
-            addComponent(getRefText2(), 2, 3);
+            addComponent(refText1, 1, 3);
+            addComponent(refText2, 2, 3);
             addComponent(new Label("Follow the order of \n" +
                     "Antecedent->Consequent! "), 0, 4);
         }
     }
 
     /*choose Currency*/
-    class CurrencyGrid extends GridFormat {
+    class CurrencyMetricsGrid extends MetricsGridFormat {
         ChoiceBox choiceColumnRow;
+        CheckBox rowLevelCheckBox;
+        CheckBox tableLevelCheckBox;
+        TextField refText;
 
-        CurrencyGrid() {
+
+        CurrencyMetricsGrid() {
             /*Initialize*/
-            this.choiceColumnRow = createChoiceBoxCols();
+            this.choiceColumnRow = createChoiceBoxCols(colListProp);
+            this.rowLevelCheckBox = createNormalCheckBox();
+            this.tableLevelCheckBox = createNormalCheckBox();
             setCbTitle();
             setHintTitle("Currency");
-            setCbRow();
-            setRefText1();
-            setCbTable();
+
+            this.refText = createRefText();
 
             /*Add to the grid*/
             addComponent(getCbTitle(), 0, 0);
             addComponent(getHintTitle(), 1, 0);
-            addComponent(getCbRow(), 0, 1);
+            addComponent(rowLevelCheckBox, 0, 1);
             addComponent(new Label("Row Level:"), 1, 1);
             addComponent(new Label("Primary Key:"), 2, 1);
             addComponent(choiceColumnRow, 3, 1);
-            ;
-            addComponent(getRefText1(), 4, 1);
-            addComponent(getCbTable(), 0, 2);
+            addComponent(refText, 4, 1);
+            addComponent(tableLevelCheckBox, 0, 2);
             addComponent(new Label("Table level"), 1, 2);
         }
     }
 
     /*choose Completeness*/
-    class CompletenessGrid extends GridFormat {
+    class CompletenessMetricsGrid extends MetricsGridFormat {
         ChoiceBox choiceColumnAttr;
         ChoiceBox choiceColumnRow;
+        CheckBox rowLevelCheckBox;
+        CheckBox attributeLevelCheckBox;
+        CheckBox tableLevelCheckBox;
 
-        CompletenessGrid() {
+        TextField refText;
+
+        CompletenessMetricsGrid() {
             /*Initialize*/
-            this.choiceColumnAttr = createChoiceBoxCols();
-            this.choiceColumnRow = createChoiceBoxCols();
+            this.choiceColumnAttr = createChoiceBoxCols(colListProp);
+            this.choiceColumnRow = createChoiceBoxCols(colListProp);
+            this.refText = createRefText();
+            this.rowLevelCheckBox = createNormalCheckBox();
+            this.attributeLevelCheckBox = createNormalCheckBox();
+            this.tableLevelCheckBox = createNormalCheckBox();
+
             setCbTitle();
             setHintTitle("Completeness");
-            setCbRow();
-            setRefText1();
-            setCbAttribute();
-            setCbTable();
 
             /*Add to the grid*/
             addComponent(getCbTitle(), 0, 0);
             addComponent(getHintTitle(), 1, 0);
-            addComponent(getCbRow(), 0, 1);
+            addComponent(this.rowLevelCheckBox, 0, 1);
             addComponent(new Label("Row Level:"), 1, 1);
             addComponent(new Label("Primary Key:"), 2, 1);
             addComponent(choiceColumnRow, 3, 1);
-            ;
-            addComponent(getRefText1(), 4, 1);
-            addComponent(getCbAttribute(), 0, 2);
+            addComponent(this.refText, 4, 1);
+            addComponent(this.attributeLevelCheckBox, 0, 2);
             addComponent(new Label("Attribute Level:"), 1, 2);
             addComponent(choiceColumnAttr, 2, 2);
-            addComponent(getCbTable(), 0, 3);
+            addComponent(this.tableLevelCheckBox, 0, 3);
             addComponent(new Label("Table level:"), 1, 3);
         }
     }
-
-    /* Create Choice box which binds the colList*/
-    private ChoiceBox createChoiceBoxCols() {
-        ChoiceBox choiceBoxCols = new ChoiceBox();
-        choiceBoxCols.itemsProperty().bind(this.colListProp);
-        return choiceBoxCols;
-    }
-
 
     private Button createButton() {
         Button submitButton = new Button("Submit");
         submitButton.setCursor(Cursor.CLOSED_HAND);
         submitButton.setPrefSize(80, 30);
-        ResultService resultService = new ResultService();
         submitButton.setOnAction(event -> {
 
-//                System.out.println(resultService.getState());
-                    if (resultService.getState() == Worker.State.READY) {
-                        ResultPage resultPage = new ResultPage();
-                        resultService.start(); // start can only be called once
-                        resultService.valueProperty().addListener(
-                                (observable, oldValue, newValue) -> {
-                                    // if no changed just for a moment, the new value will be null!
-                                    if (newValue != null) {
-                                        resultPage.setTextAreaForResult(newValue);
-                                    }
-                                }
-                        );
-                    } else {
-                        resultService.restart();
-                    }
+                    nameMapMetric.clear();
+                    getResultContent();
+                    BarChart<String, Number> barChart = createChart();
+                    VBox verticalContainer = new VBox();
+                    verticalContainer.setPrefHeight(200);
+                    verticalContainer.getChildren().add(barChart);
+                    this.scrollPane.setContent(verticalContainer);
+
                 }
         );
         return submitButton;
     }
 
-    class ResultService extends Service<String> {
+    private BarChart<String, Number> createChart() {
 
-        @Override
-        public void start() {
-            super.start();
+        CategoryAxis x = new CategoryAxis();
+//        x.setStartMargin(50);
+//        x.setEndMargin(50);
+        x.setTickLength(5);
+//        x.setTickLabelRotation(90);
+        x.setLabel("Metrics");
+
+        NumberAxis y = new NumberAxis(0, 100, 20);
+        y.setSide(Side.LEFT);
+        y.setLabel("Score (in %)");
+
+        XYChart.Series<String, Number> xy = new XYChart.Series<String, Number>();
+        xy.setName("Metrics");
+
+        Iterator iterator = nameMapMetric.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry pair = (Map.Entry) iterator.next();
+            XYChart.Data<String, Number> data =
+                    new XYChart.Data<String, Number>((String) pair.getKey(), (float) pair.getValue() * 100);
+            xy.getData().add(data);
         }
 
-        @Override
-        protected Task<String> createTask() {
-            Task<String> task = new Task<String>() {
-                @Override
-                protected String call() throws Exception {
-                    String summary = "";
-                    if (accuracyGrid.getCbTitle().isSelected()) {
-                        summary += getAccuracyResult(accuracyGrid);
-                    }
-                    if (consistencyGrid.getCbTitle().isSelected()) {
-                        summary += getConsistencyResult(consistencyGrid);
-                    }
-                    if (currencyGrid.getCbTitle().isSelected()) {
-                        summary += getCurrencyResult(currencyGrid);
-                    }
-                    if (completenessGrid.getCbTitle().isSelected()) {
-                        summary += getCompletenessResult(completenessGrid);
-                    }
-                    return summary;
-                }
-            };
-            return task;
+        xy.getData().forEach(System.out::println);
+        BarChart<String, Number> barChart = new BarChart<String, Number>(x, y);
+        barChart.getData().add(xy);
+//        barChart.setBarGap(5);
+//        barChart.setPrefWidth(500);
+
+        return barChart;
+    }
+
+    private void getResultContent() {
+
+        if (accuracyGrid.getCbTitle().isSelected()) {
+            getAccuracyResult();
+        }
+        if (consistencyGrid.getCbTitle().isSelected()) {
+            getConsistencyResult();
+        }
+        if (currencyGrid.getCbTitle().isSelected()) {
+            getCurrencyResult();
+        }
+        if (completenessGrid.getCbTitle().isSelected()) {
+            getCompletenessResult();
         }
     }
 
+
     /*the following 4 functions connect to the backend code*/
 
-    private String getAccuracyResult(AccuracyGrid accuracyGrid) {
-        String result = "";
+
+    private void getAccuracyResult() {
         try {
+
             Statement statement = conn.createStatement();
             String tableName = (String) choiceTable.getValue();
-//                        System.out.println(tableName);
             String accuracyCol = (String) accuracyGrid.examinedCol.getValue();
             System.out.println(accuracyCol);
 
             String pathText = accuracyGrid.getPathText().getText();
 
-            String refNum = accuracyGrid.getRefText1().getText().trim(); // trim to ensure safe input
+            String refNum = accuracyGrid.refText.getText().trim(); // trim to ensure safe input
 
-            main.java.com.DBMS.Backend.Accuracy accuracy = new main.java.com.DBMS.Backend.Accuracy(tableName, accuracyCol, pathText, refNum
+            Accuracy accuracy = new Accuracy(tableName, accuracyCol, pathText, refNum
                     , statement);
-            result += ("The Accuracy is: " + accuracy.calculate() + "\n");
+
+            if (accuracyGrid.traditionalCheckBox.isSelected()) {
+                Accuracy.Traditional traditional = accuracy.new Traditional();
+                nameMapMetric.put("Traditional Accuracy", traditional.calculate());
+            }
+            if (accuracyGrid.levenshteinCheckBox.isSelected()) {
+                Accuracy.Levenshtein levenshtein = accuracy.new Levenshtein();
+                nameMapMetric.put("Levenshtein Accuracy", levenshtein.calculate());
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
     }
 
-    private String getConsistencyResult(ConsistencyGrid consistencyGrid) {
-        String result = "";
+    private void getConsistencyResult() {
         try {
             Statement statement = conn.createStatement();
             String tableName = (String) choiceTable.getValue();
@@ -352,84 +405,88 @@ public class MetricsPage {
 
             String pathText = consistencyGrid.getPathText().getText();
 
-            String refNum1 = consistencyGrid.getRefText1().getText().trim(); // trim to ensure safe input
-            String refNum2 = consistencyGrid.getRefText2().getText().trim(); // trim to ensure safe input
+            String refNum1 = consistencyGrid.refText1.getText().trim(); // trim to ensure safe input
+            String refNum2 = consistencyGrid.refText2.getText().trim(); // trim to ensure safe input
 
             Consistency consistency = new Consistency(tableName, consistencyCol1, consistencyCol2, pathText,
                     refNum1, refNum2, statement); //todo: too many parameters
-            result += ("The Consistency is: " + consistency.calculation() + "\n");
+            nameMapMetric.put("Consistency", (float) consistency.calculation());
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
+
     }
 
 
-    private String getCurrencyResult(CurrencyGrid currencyGrid) {
-        String result = "";
+    private void getCurrencyResult() {
         try {
             Statement statement = conn.createStatement();
             String tableName = (String) choiceTable.getValue();
-//                        System.out.println(tableName);
 
             Currency currency = new Currency(tableName, statement);
-            if (currencyGrid.getCbRow().isSelected()) {
+
+            if (currencyGrid.choiceColumnRow.getValue() != null) {
                 currency.setPrimaryKey((String) currencyGrid.choiceColumnRow.getValue());
-                Currency.RowLevel rowLevel = currency.new RowLevel(
-                        Long.parseLong(currencyGrid.getRefText1().getText()));
-                result += ("The Currency for the row with primary key [" +
-                        currencyGrid.choiceColumnRow.getValue() + "] = " +
-                        currencyGrid.getRefText1().getText() + " " +
-                        "is: " + rowLevel.calculate() + "\n");
+            } else {
+                currency.setPrimaryKey(colListProp.getValue().get(0)); // first column is usually the primary key
             }
 
-            if (currencyGrid.getCbTable().isSelected()) {
-                Currency.TableLevel tableLevel = currency.new TableLevel();
-                result += ("The relation Currency is: " + tableLevel.calculate() + "\n");
+            if (currencyGrid.rowLevelCheckBox.isSelected()) {
 
+                Currency.RowLevel rowLevel = currency.new RowLevel(
+                        Long.parseLong(currencyGrid.refText.getText()));
+
+                nameMapMetric.put("Currency - for primary key " + currencyGrid.choiceColumnRow.getValue() +
+                                " = " + currencyGrid.refText.getText()
+                        , (float) rowLevel.calculate());
+
+            }
+
+            if (currencyGrid.tableLevelCheckBox.isSelected()) {
+                Currency.TableLevel tableLevel = currency.new TableLevel();
+                nameMapMetric.put("Currency - Table Level", (float) tableLevel.calculate());
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
     }
 
-    private String getCompletenessResult(CompletenessGrid completenessGrid) {
-        String result = "";
+    private void getCompletenessResult() {
         try {
             Statement statement = conn.createStatement();
             String tableName = (String) choiceTable.getValue();
-//                        System.out.println(tableName);
             Completeness completeness = new Completeness(tableName, statement);
 
-            if (completenessGrid.getCbRow().isSelected()) {
+            if (completenessGrid.rowLevelCheckBox.isSelected()) {
 
                 Completeness.RowLevel rowLevel = completeness.
                         new RowLevel((String) completenessGrid.choiceColumnRow.getValue(),
-                        completenessGrid.getRefText1().getText());
-                result += ("The row level Completeness is: " + rowLevel.calculate() + "\n");
+                        completenessGrid.refText.getText());
 
+                nameMapMetric.put(completenessGrid.choiceColumnRow.getValue() +
+                                " = " + completenessGrid.refText.getText()
+                        , rowLevel.calculate());
             }
-            if (completenessGrid.getCbAttribute().isSelected()) {
+            if (completenessGrid.attributeLevelCheckBox.isSelected()) {
 
                 Completeness.AttributeLevel attributeLevel =
-                        completeness.
-                                new AttributeLevel((String) completenessGrid.choiceColumnAttr.getValue());
-                result += ("The attribute level Completeness for " + completenessGrid.choiceColumnAttr.getValue()
-                        + " is: " + attributeLevel.calculate() + "\n");
+                        completeness.new AttributeLevel((String) completenessGrid.choiceColumnAttr.getValue());
+
+                nameMapMetric.put("Completeness - for attribute " + completenessGrid.choiceColumnAttr.getValue()
+                        , attributeLevel.calculate());
             }
 
-            if (completenessGrid.getCbTable().isSelected()) {
+            if (completenessGrid.tableLevelCheckBox.isSelected()) {
                 Completeness.TableLevel tableLevel = completeness.new TableLevel();
-                result += ("The relation level completeness for is: " + tableLevel.calculate() + "\n");
+                nameMapMetric.put("Completeness - Table Level", tableLevel.calculate());
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
     }
+
 
     private BorderPane createBorderPane(GridPane tableGrid, GridPane metricsGrids, Button submitButton) {
         /*combine the table grid with the big grid above in the borderPane with position adjustments*/
@@ -450,7 +507,7 @@ public class MetricsPage {
 
         stage.setTitle("Metrics Selection");
         double sceneWidth = 850;
-        double sceneHeight = 650;
+        double sceneHeight = 700;
         stage.setWidth(sceneWidth);
         stage.setHeight(sceneHeight);
 

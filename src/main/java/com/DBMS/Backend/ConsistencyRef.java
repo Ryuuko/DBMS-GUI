@@ -10,7 +10,7 @@ public class ConsistencyRef extends main.java.com.DBMS.Backend.CSVLoader {
     private int antecedent;
     private int consequent;
     private List<List> list;
-    private Map<List<String>, Long> freqList;
+    private Map<List<String>, Long> freqMap;
     private long total;
 
     public ConsistencyRef(String url, int antecedent, int consequent, boolean skip) {
@@ -31,13 +31,14 @@ public class ConsistencyRef extends main.java.com.DBMS.Backend.CSVLoader {
 //      System.out.println(refElement);
     }
 
+    /*Form the freqMap to record each group with its frequency(count) in the reference dataset*/
     public void freqListBuild() {
-        this.freqList = this.list.stream()
+        this.freqMap = this.list.stream()
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 
     public Map<List<String>, Long> freqListGetter() {
-        return freqList;
+        return freqMap;
     }
 
     public long totalGetter() {

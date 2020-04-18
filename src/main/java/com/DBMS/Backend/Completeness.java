@@ -62,6 +62,7 @@ public class Completeness extends Metrics {
 
     public class RowLevel extends Level {
         public RowLevel(String pkCol, String pk) {
+
             if (!columns.contains(pkCol)) {
                 System.out.println("Your Primary Key is not in the columns");
             } else {
