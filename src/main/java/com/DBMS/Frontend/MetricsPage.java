@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
@@ -129,7 +130,7 @@ public class MetricsPage {
 
     private ScrollPane createScrollPane() {
         ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setPrefHeight(120);
+        scrollPane.setPrefHeight(130);
         scrollPane.setPrefWidth(500);
         return scrollPane;
     }
@@ -299,46 +300,48 @@ public class MetricsPage {
 
                     nameMapMetric.clear();
                     getResultContent();
-                    BarChart<String, Number> barChart = createChart();
-                    VBox verticalContainer = new VBox();
-                    verticalContainer.setPrefHeight(200);
-                    verticalContainer.getChildren().add(barChart);
-                    this.scrollPane.setContent(verticalContainer);
+                    BarChart<Number, String> barChart = createChart();
+                    this.scrollPane.setContent(barChart);
 
                 }
         );
         return submitButton;
     }
 
-    private BarChart<String, Number> createChart() {
+    private BarChart<Number, String> createChart() {
 
         CategoryAxis x = new CategoryAxis();
-//        x.setStartMargin(50);
-//        x.setEndMargin(50);
+        x.setStartMargin(10);
+        x.setEndMargin(10);
         x.setTickLength(5);
-//        x.setTickLabelRotation(90);
         x.setLabel("Metrics");
 
         NumberAxis y = new NumberAxis(0, 100, 20);
-        y.setSide(Side.LEFT);
+        y.setSide(Side.TOP);
         y.setLabel("Score (in %)");
 
-        XYChart.Series<String, Number> xy = new XYChart.Series<String, Number>();
+        XYChart.Series<Number, String> xy = new XYChart.Series<Number, String>();
         xy.setName("Metrics");
 
         Iterator iterator = nameMapMetric.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();
-            XYChart.Data<String, Number> data =
-                    new XYChart.Data<String, Number>((String) pair.getKey(), (float) pair.getValue() * 100);
+            XYChart.Data<Number, String> data =
+                    new XYChart.Data<Number, String>((float) pair.getValue() * 100, (String) pair.getKey());
+
+            VBox v = new VBox();
+            v.getChildren().add(new Label(String.valueOf(data.getXValue()) + " %"));
+            v.setAlignment(Pos.CENTER);
+            data.setNode(v);
             xy.getData().add(data);
         }
 
-        xy.getData().forEach(System.out::println);
-        BarChart<String, Number> barChart = new BarChart<String, Number>(x, y);
+
+        BarChart<Number, String> barChart = new BarChart<Number, String>(y, x);
         barChart.getData().add(xy);
-//        barChart.setBarGap(5);
-//        barChart.setPrefWidth(500);
+        barChart.setBarGap(5);
+        barChart.setPrefWidth(450);
+        barChart.setPrefHeight(100 * nameMapMetric.size());
 
         return barChart;
     }
@@ -464,7 +467,9 @@ public class MetricsPage {
                         new RowLevel((String) completenessGrid.choiceColumnRow.getValue(),
                         completenessGrid.refText.getText());
 
-                nameMapMetric.put(completenessGrid.choiceColumnRow.getValue() +
+                nameMapMetric.put(
+                        "Completeness - Row Level: " +
+                                completenessGrid.choiceColumnRow.getValue() +
                                 " = " + completenessGrid.refText.getText()
                         , rowLevel.calculate());
             }
@@ -473,7 +478,7 @@ public class MetricsPage {
                 Completeness.AttributeLevel attributeLevel =
                         completeness.new AttributeLevel((String) completenessGrid.choiceColumnAttr.getValue());
 
-                nameMapMetric.put("Completeness - for attribute " + completenessGrid.choiceColumnAttr.getValue()
+                nameMapMetric.put("Completeness - Attribute Level: " + completenessGrid.choiceColumnAttr.getValue()
                         , attributeLevel.calculate());
             }
 
