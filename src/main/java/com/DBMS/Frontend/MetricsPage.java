@@ -6,6 +6,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.concurrent.Worker;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
@@ -19,6 +22,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -132,6 +136,7 @@ public class MetricsPage {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setPrefHeight(130);
         scrollPane.setPrefWidth(500);
+        scrollPane.setContent(new Label("Your result will be shown in this box~!"));
         return scrollPane;
     }
 
@@ -296,17 +301,68 @@ public class MetricsPage {
         Button submitButton = new Button("Submit");
         submitButton.setCursor(Cursor.CLOSED_HAND);
         submitButton.setPrefSize(80, 30);
+        ResultService resultService = new ResultService();
+        resultService.setOnSucceeded((event) -> {
+            this.scrollPane.setContent(resultService.getValue()); // the thread in the service to calculate
+        });
         submitButton.setOnAction(event -> {
+//                    createLoadingHints();
+//                    callSleepMethod();
+                    this.scrollPane.setContent(new Label("Loading"));  // the UX thread which display while calculating
 
-                    nameMapMetric.clear();
-                    getResultContent();
-                    BarChart<Number, String> barChart = createChart();
-                    this.scrollPane.setContent(barChart);
-
+                    if (resultService.getState() == Worker.State.READY) {
+                        resultService.start(); //
+                    } else {
+                        resultService.restart();
+                    }
                 }
         );
+
         return submitButton;
     }
+
+
+    class ResultService extends Service<BarChart> {
+
+        @Override
+        protected Task<BarChart> createTask() {
+            Task<BarChart> task = new Task<BarChart>() {
+                @Override
+                protected BarChart call() throws Exception {
+                    return createDataChart();
+                }
+            };
+            return task;
+        }
+    }
+
+
+    private void createLoadingHints() {
+        VBox vBox = new VBox();
+        vBox.setPrefSize(this.scrollPane.getPrefWidth(), this.scrollPane.getPrefHeight());
+        Label hintWord = new Label("Loading");
+        hintWord.setFont(Font.font("Cambria", 18));
+        vBox.getChildren().add(hintWord);
+        vBox.setAlignment(Pos.CENTER);
+
+
+    }
+
+    private void callSleepMethod() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private BarChart<Number, String> createDataChart() {
+
+        nameMapMetric.clear();
+        getResultContent();
+        return createChart();
+    }
+
 
     private BarChart<Number, String> createChart() {
 
@@ -322,7 +378,7 @@ public class MetricsPage {
 
         XYChart.Series<Number, String> xy = new XYChart.Series<Number, String>();
         xy.setName("Metrics");
-
+//        System.out.println(nameMapMetric); for debugging: if the data is correctly output
         Iterator iterator = nameMapMetric.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();

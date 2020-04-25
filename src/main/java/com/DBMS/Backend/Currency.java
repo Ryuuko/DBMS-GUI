@@ -120,7 +120,9 @@ public class Currency extends Metrics {
                         //         "--what's the age of the row?\n"
                         "DECLARE @age FLOAT\n" +
                         "SET @age=\n" +
-                        "(SELECT datediff(millisecond, timeLog.Time_Record, SYSDATETIME()) FROM \n" +
+                        // remember to use second as the datepart
+                        // using millisecond datepart, we can only compute the datediff of 24 days!
+                        "(SELECT datediff(second, timeLog.Time_Record, SYSDATETIME()) FROM \n" +
                         "(SELECT TOP 1 Time_Record FROM @timeLog) AS timeLog);\n" +
                         "\n" +
                         //        "--The update frequency per millisecond\n" +
@@ -130,7 +132,7 @@ public class Currency extends Metrics {
                         //       "--what's the age of most updated value\n" +
                         "DECLARE @ageUpdate FLOAT\n" +
                         "SET @ageUpdate=\n" +
-                        "(SELECT datediff(millisecond, timeLog.Time_Record, SYSDATETIME()) FROM \n" +
+                        "(SELECT datediff(second, timeLog.Time_Record, SYSDATETIME()) FROM \n" +
                         "(SELECT TOP 1 Time_Record FROM @timeLog ORDER BY Time_Record DESC --make sure to use descendent order\n" +
                         ") timeLog);\n" +
                         "\n" +

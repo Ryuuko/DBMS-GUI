@@ -62,7 +62,6 @@ public class Completeness extends Metrics {
 
     public class RowLevel extends Level {
         public RowLevel(String pkCol, String pk) {
-
             if (!columns.contains(pkCol)) {
                 System.out.println("Your Primary Key is not in the columns");
             } else {
@@ -109,7 +108,7 @@ public class Completeness extends Metrics {
     public void columnsInput() {
         this.columns = new ArrayList<>();
         String command = "select COLUMN_NAME from information_schema.columns where table_name = '" +
-                tableName + "\' ;";
+                tableName + "' ;";
 //        System.out.println(command); // for debugging
         try {
             ResultSet resultSet = statement.executeQuery(command);
