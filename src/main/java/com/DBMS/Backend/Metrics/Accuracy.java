@@ -1,29 +1,32 @@
-package com.DBMS.Backend;
+package com.DBMS.Backend.Metrics;
 
+import com.DBMS.Backend.ObjectClass.MetricsParameter;
+import com.DBMS.Backend.ObjectClass.ReferenceParameter;
+import com.DBMS.Backend.Reference.AccuracyRef;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashSet;
 
 
-public class Accuracy extends Metrics {
+public class Accuracy extends MetricsBasis {
     private String tableName;
     private String col; // specify which column to be checked
     private String path;
     private int refNum;
-    private Statement statement;
+    private boolean skip;
 
 
-    public Accuracy(String tableName, String col, String refPath, String refNum, Statement statement) {
+    public Accuracy(MetricsParameter input) {
 
-        super(tableName, statement);
-        this.col = col;
-        this.tableName = tableName;
-        this.path = refPath;
-        this.refNum = Integer.parseInt(refNum);
-        this.statement = statement;
+        super(input.getTableName(), input.getConnection());
+        this.col = input.getColumns1();
+        this.tableName = input.getTableName();
+        this.path = input.getPath();
+        this.refNum = Integer.parseInt(input.getRef1());
+        this.skip = input.isSkip();
+
     }
 
     abstract class CalculationMethod {
@@ -31,17 +34,18 @@ public class Accuracy extends Metrics {
         float score = 0;
 
         public float calculate() {
-            main.java.com.DBMS.Backend.AccuracyRef accuracyRef =
-                    new main.java.com.DBMS.Backend.AccuracyRef(path,
-                            refNum, true);
+            ReferenceParameter referenceParameter = new ReferenceParameter(path, skip);
+            referenceParameter.setColumn1(refNum);
+            AccuracyRef accuracyRef = new AccuracyRef(referenceParameter);
 //        System.out.println(this.path);
-            accuracyRef.csvRead();
+            accuracyRef.readCsv();
+
             /*Number initialization*/
 
             try {
                 String dataCommand = "SELECT " + col + " FROM " + tableName + ";";
                 //        System.out.println(dataCommand);
-                ResultSet resultSet = statement.executeQuery(dataCommand); // traversing the result set from the first statement
+                ResultSet resultSet = getStatement().executeQuery(dataCommand); // traversing the result set from the first statement
 
                 while (resultSet.next()) {
 //                System.out.println(dataValue); // for debugging
@@ -62,6 +66,8 @@ public class Accuracy extends Metrics {
 //                    System.out.println("Score for this round is: ");
 //                    System.out.println(this.score);
                 }
+                resultSet.close();
+                // cannot use getStatement().close() here because u may reuse it when more than 1 levels get called
             } catch (SQLException e) {
                 System.out.println("Connection failure.");
                 e.printStackTrace();
@@ -107,7 +113,7 @@ public class Accuracy extends Metrics {
 //                                System.out.println("the edit distance between" + dataValue +
 //                                        refCandidate + "is: ");
 //                                System.out.println(tempScore);
-                if (tempScore < maxDifference) { //todo:should we set a super large maxScore?
+                if (tempScore < maxDifference) {
                     // if maxScore happen to be very small and tempScore very large,
                     // then the string will still have full score
                     refString = refCandidate; // the reference String will be the temporary champion

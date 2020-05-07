@@ -21,27 +21,25 @@ public class MetricsGridFormat {
     private Button fileButton;
     private Label hintTitle;
     private CheckBox cbTitle;
-    private CheckBox cbRow;
-    private CheckBox cbAttribute;
-    private CheckBox cbTable;
     private TextField pathText;
 
     public MetricsGridFormat() {
-        /*construct some common value of the grid pane in order to standardize*/
+        // construct some common value of the grid pane in order to standardize
         this.gr = new GridPane();
         gr.setAlignment(Pos.CENTER_LEFT);
         gr.setHgap(10);
         gr.setVgap(15);
     }
 
-    /*Add node into the GridPane*/
+    //Add node into the GridPane
+    // Default: disable all components (make them unclickable "transparent") except the title and its checkbox
     public void addComponent(Node node, int col, int row) {
-        makeNodeTransparent(node); // disable as default
+        makeNodeTransparent(node);
         this.gr.add(node, col, row);
     }
 
     private void makeNodeTransparent(Node node) {
-        /*disable all components except the title and its checkbox*/
+
         if (node.getUserData() == null) {
             node.setMouseTransparent(true); // if true, transparent to mouse events
             node.setOpacity(0.5);
@@ -55,18 +53,12 @@ public class MetricsGridFormat {
         return refText;
     }
 
-    /* Create Choice box which binds the colList*/
+    // Create Choice box (in order to choose tables) which binds the colList
     public ChoiceBox createChoiceBoxCols(SimpleListProperty<String> colListProp) {
         ChoiceBox choiceBoxCols = new ChoiceBox();
         choiceBoxCols.itemsProperty().bind(colListProp);
         return choiceBoxCols;
     }
-
-    public CheckBox createNormalCheckBox() {
-        return new CheckBox();
-    }
-
-    /*getter and setter for member variables. Set and get particular components when required*/
 
     public GridPane getGr() {
         return gr;
@@ -94,7 +86,7 @@ public class MetricsGridFormat {
         return fileButton;
     }
 
-    /*click the button will trigger the file navigator!*/
+    // click the button will trigger the file navigator!
     public void setFileButton(Stage s) {
         this.fileButton = new Button("...");
         fileButton.setMaxSize(10, 10);
@@ -114,7 +106,7 @@ public class MetricsGridFormat {
         return cbTitle;
     }
 
-    /*the checkbox with title should control if the grid components display*/
+    // the checkbox with title should control if the grid components display
     public void setCbTitle() {
         this.cbTitle = new CheckBox();
         String keyword = "Cbtitle";
@@ -134,7 +126,7 @@ public class MetricsGridFormat {
 
     }
 
-    /*enable all the components in the grid*/
+    // enable all the components in the grid
     private void enableComponents() {
         gr.getChildren().forEach(node -> {
             node.setMouseTransparent(false);
@@ -143,7 +135,7 @@ public class MetricsGridFormat {
         });
     }
 
-    /*disable all the components in the grid, except the title checkbox*/
+    // disable all the components in the grid, except the title checkbox
     private void disableComponents() {
         gr.getChildren().forEach(this::makeNodeTransparent); //
     }

@@ -1,19 +1,22 @@
-package com.DBMS.Backend;
+package com.DBMS.Backend.DataGetter;
+
+import com.DBMS.Backend.ObjectClass.LoginParameter;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class MssqlConnection {
+public class ConnectionGetter {
 
     private String dbUrl;
     private Connection connection;
 
-    public MssqlConnection(String hostname, String database, String username, String password) {
+    public ConnectionGetter(LoginParameter input) {
 
-        this.dbUrl = "jdbc:sqlserver://" + hostname + ";databaseName=" + database +
-                ";user=" + username + ";password=" + password;
-        System.out.println(dbUrl);
+        this.dbUrl = "jdbc:sqlserver://" + input.getHostname() +
+                ";databaseName=" + input.getDatabaseName() +
+                ";user=" + input.getUserName() + ";password=" + input.getPassword();
+//        System.out.println(dbUrl); // check if you input correctly
     }
 
     public boolean startConnection() {

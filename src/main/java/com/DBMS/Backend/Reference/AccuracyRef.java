@@ -1,18 +1,19 @@
-package main.java.com.DBMS.Backend;
+package com.DBMS.Backend.Reference;
+
+import com.DBMS.Backend.ObjectClass.ReferenceParameter;
 
 import java.util.HashSet;
 
-public class AccuracyRef extends main.java.com.DBMS.Backend.CSVLoader {
+public class AccuracyRef extends CSVLoader {
     private HashSet<String> refSet;
     private int col; // the user can choose which column should be the reference
 
-    public AccuracyRef(String url, int num, boolean skip) {
-        super(url, skip);
-        this.col = num - 1; // an intuitive way to view the first column as 1 rather than 0
+    public AccuracyRef(ReferenceParameter input) {
+        super(input.getPath(), input.isSkip());
+        this.col = input.getColumn1() - 1; // an intuitive way to view the first column as 1 rather than 0
         this.refSet = new HashSet<>();
     }
 
-    /*override the method in csvReader's csvRead()*/
     @Override
     public void refBuilding(String[] line) {
         String refElement = line[this.col];

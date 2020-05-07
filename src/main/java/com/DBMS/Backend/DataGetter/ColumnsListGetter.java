@@ -1,4 +1,4 @@
-package com.DBMS.Backend;
+package com.DBMS.Backend.DataGetter;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -7,10 +7,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ColumnsGetter {
+public class ColumnsListGetter {
     private List<String> columns;
 
-    public ColumnsGetter(Connection connection, String tableName) {
+    public ColumnsListGetter(Connection connection, String tableName) {
         this.columns = new ArrayList<>();
         String command = "select COLUMN_NAME from information_schema.columns where table_name = '" +
                 tableName + "\' ;";

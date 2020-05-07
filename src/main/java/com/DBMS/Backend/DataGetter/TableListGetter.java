@@ -1,4 +1,4 @@
-package com.DBMS.Backend;
+package com.DBMS.Backend.DataGetter;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
