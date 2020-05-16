@@ -37,16 +37,12 @@ public class Accuracy extends MetricsBasis {
             ReferenceParameter referenceParameter = new ReferenceParameter(path, skip);
             referenceParameter.setColumn1(refNum);
             AccuracyRef accuracyRef = new AccuracyRef(referenceParameter);
-//        System.out.println(this.path);
             accuracyRef.readCsv();
-
-            /*Number initialization*/
-
             try {
                 String dataCommand = "SELECT " + col + " FROM " + tableName + ";";
                 //        System.out.println(dataCommand);
-                ResultSet resultSet = getStatement().executeQuery(dataCommand); // traversing the result set from the first statement
-
+                ResultSet resultSet = getStatement().executeQuery(dataCommand); // traversing the result
+                // set from the first statement
                 while (resultSet.next()) {
 //                System.out.println(dataValue); // for debugging
                     if (resultSet.getString(col) != null) {
