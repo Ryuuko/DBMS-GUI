@@ -110,8 +110,6 @@ public class Accuracy extends MetricsBasis {
 //                                        refCandidate + "is: ");
 //                                System.out.println(tempScore);
                 if (tempScore < maxDifference) {
-                    // if maxScore happen to be very small and tempScore very large,
-                    // then the string will still have full score
                     refString = refCandidate; // the reference String will be the temporary champion
                     maxDifference = tempScore;
                 }
@@ -120,6 +118,10 @@ public class Accuracy extends MetricsBasis {
 //
 //            System.out.println("The edit distance between them is: " +
 //                    levenshteinDistance.apply(examinedValue, refString));
+
+
+            // we use the length of the longer string as the Denominator
+            // (Marcus Kaiser, Mathias Klier, and Bernd Heinrich 2007)
 
             float longerStringLen = (examinedValue.length() - refString.length()) > 0 ?
                     examinedValue.length() : refString.length();
