@@ -9,14 +9,14 @@ import javafx.stage.StageStyle;
 
 public class EnlargedResult {
 
-    public EnlargedResult(ScrollPane originPane) {
+    public EnlargedResult(ScrollPane originPane, String titleName) {
         final Stage stage = new Stage();
         ScrollPane largeScrollPane = new ScrollPane();
         largeScrollPane.setContent(originPane.getContent());
 
         Scene scene = new Scene(largeScrollPane);
         stage.setScene(scene);
-        stage.setTitle("Enlarged result");
+        stage.setTitle(titleName + "'s result");
         stage.setHeight(450);
         stage.setWidth(500);
         stage.initStyle(StageStyle.DECORATED);

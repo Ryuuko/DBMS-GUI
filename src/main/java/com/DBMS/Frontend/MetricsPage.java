@@ -314,7 +314,7 @@ public class MetricsPage {
     private Button createEnlargeButton() {
         Button button = new Button("Enlarge and keep the result");
         button.setOnAction(event -> {
-            new EnlargedResult(this.scrollPane);
+            new EnlargedResult(this.scrollPane, (String) choiceTable.getValue());
         });
         return button;
     }
