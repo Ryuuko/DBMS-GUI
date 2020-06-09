@@ -14,15 +14,19 @@
 ## Functionality:
 
 The user will start the programm with this page:
+
  ![picture](Images/LoginPage.png)
  
 After they have successfully logged in, they will reach the metrics page:
+
 ![picture](Images/MetricsPage.png)
 
 The small window will display the result of the Metrics:
+
  ![picture](Images/smallResult.png)
 
 It's possible to compare results with the enlarged function
+
  ![picture](Images/enlargedResult.png)
 
 ## Comments on other components:
