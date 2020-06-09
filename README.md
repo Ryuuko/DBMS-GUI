@@ -15,7 +15,7 @@
 
 The user will start the programm with this page:
  
- ![alt text](https://raw.githubusercontent.com/Ryuuko/DBMS-GUI/master/Images/LoginPage.png?token=AGAODQPZU3BHR2ZV76EXZXC636XZW)
+ ![alt text](https://raw.githubusercontent.com/Ryuuko/DBMS-GUI/master/Images/LoginPage.png?token=AGAODQKWOZNT7TBOMKSAF6K636ZB6)
  
 After they have successfully logged in, they will reach the metrics page:
 
