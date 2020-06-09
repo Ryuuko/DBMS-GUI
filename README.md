@@ -1,7 +1,7 @@
 # DBMS-GUI
 
 
-The overview of project structure:
+## The overview of project structure:
 
 - Backend: manipulate the connection and result from Mircosoft SQL Server
   - DataGetter: directly get some general data, eg. table names in the database
@@ -11,7 +11,7 @@ The overview of project structure:
   
 - Frontend: handle the interaction between Backend and the users' requests
 
-Functionality:
+## Functionality:
 
 The user will start the programm with this page:
  
@@ -29,6 +29,6 @@ It's possible to compare results with the enlarged function
 
 ![alt text](https://raw.githubusercontent.com/Ryuuko/DBMS-GUI/master/Images/enlargedResult.png?token=AGAODQP3ICDZ76O2P7HLVAC636YIS)
 
-Comments on other components:
+## Comments on other components:
 - target/Data_Quality_Metrics-1.0.jar is the programm itself
 - DBMS-GUI/src/main/java/Main.java provides a "Dummy" Main.class in order to implement JavaFx in jar.File
